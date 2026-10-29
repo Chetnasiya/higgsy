@@ -34,8 +34,31 @@ app.post("/api/v1/signup", async (req, res) => {
   });
 });
 
-app.post("/api/v1/signin", (req, res) => {
-  res.json({});
+app.post("/api/v1/signin", async (req, res) => {
+  const { success, data } = CreateUserSchema.safeParse(req.body);
+  if (!success || !data.username.trim() || !data.password) {
+    res.status(400).json({
+      message: "Username and password are required"
+    });
+    return;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      username: data.username.trim()
+    }
+  });
+
+  if (!user || user.password !== data.password) {
+    res.status(401).json({
+      message: "Invalid username or password"
+    });
+    return;
+  }
+
+  res.json({
+    id: user.id
+  });
 });
 
 // Avatar
