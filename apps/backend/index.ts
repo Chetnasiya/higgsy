@@ -1,131 +1,173 @@
 import express from "express";
+import path from "node:path";
 import { prisma } from "./db";
-import { CreateAvatarSchenma, CreateUserSchema } from "./types";
-import { createImage } from "./image";
-import { uuid } from "uuidv4";
+import { CreateAvatarSchenma, CreateUserSchema, CreateVideoSchema } from "./types";
 import { generateVideo } from "./video";
 import cors from "cors";
 
 const app = express();
 
 app.use(cors());
-
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use("/output", express.static(path.join(process.cwd(), "output")));
 
 // Auth
 app.post("/api/v1/signup", async (req, res) => {
-  const {success, data} = CreateUserSchema.safeParse(req.body);
-  if (!success) {
-    res.status(411).json({
-      message: "Incorrect credentials"
-    })
-    return;
+  const parsed = CreateUserSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(411).json({
+      message: "Username must be at least 2 characters and password at least 6 characters.",
+    });
+  }
+
+  const existing = await prisma.user.findUnique({
+    where: { username: parsed.data.username },
+  });
+
+  if (existing) {
+    return res.status(409).json({
+      message: "Username is already taken.",
+    });
   }
 
   const user = await prisma.user.create({
     data: {
-      username: req.body.username,
-      password: req.body.password
-    }
-  })
-
-  res.json({
-    id: user.id
+      username: parsed.data.username,
+      password: parsed.data.password,
+    },
   });
+
+  return res.json({ id: user.id, username: user.username });
 });
 
 app.post("/api/v1/signin", async (req, res) => {
-  const { success, data } = CreateUserSchema.safeParse(req.body);
-  if (!success || !data.username.trim() || !data.password) {
-    res.status(400).json({
-      message: "Username and password are required"
+  const parsed = CreateUserSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Username and password are required.",
     });
-    return;
   }
 
   const user = await prisma.user.findUnique({
     where: {
-      username: data.username.trim()
-    }
+      username: parsed.data.username,
+    },
   });
 
-  if (!user || user.password !== data.password) {
-    res.status(401).json({
-      message: "Invalid username or password"
+  if (!user || user.password !== parsed.data.password) {
+    return res.status(401).json({
+      message: "Invalid username or password.",
     });
-    return;
   }
 
-  res.json({
-    id: user.id
-  });
+  return res.json({ id: user.id, username: user.username });
 });
 
 // Avatar
 app.post("/api/v1/avatar", async (req, res) => {
-  const { success, data } = CreateAvatarSchenma.safeParse(req.body);
-  if (!success) {
-    res.status(411).json({
-      message: "Incorrect"
+  const parsed = CreateAvatarSchenma.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(411).json({
+      message: "Please provide a valid avatar name and image.",
     });
-    return 
   }
-  const leftProfileId = uuid();
-  const rightProfileId = uuid();
-  const frontProfileId = uuid();
 
-  // await Promise.all([
-  //   createImage("Create a side profile for the user for the left side. It should be a high quality portfolio shoot type photo", data.image, `./assets/${leftProfileId}.png`),
-  //   createImage("Create a side profile for the user for the right side. It should be a high quality portfolio shoot type photo", data.image, `./assets/${rightProfileId}.png`),
-  //   createImage("Create a front profile for the user. It should be a high quality portfolio shoot type photo", data.image, `./assets/${frontProfileId}.png`),
-  // ])
+  const userId = parsed.data.userId ?? "1";
+  const userExists = await prisma.user.findUnique({ where: { id: userId } });
+  if (!userExists) {
+    return res.status(404).json({
+      message: "User not found.",
+    });
+  }
 
-  // put in s3 and then put in db
-  await prisma.avatar.create({
+  const avatar = await prisma.avatar.create({
     data: {
-      userId: "1",
-      name: req.body.name
-    }
-  })
-  
-  res.json({});
+      userId,
+      name: parsed.data.name,
+    },
+  });
+
+  return res.json({ id: avatar.id, name: avatar.name, userId: avatar.userId });
 });
 
 app.get("/api/v1/avatar/:avatarId", async (req, res) => {
-  const avatars = await prisma.avatar.findMany({
-    where: {
-      userId: "1",
-    }
-  })
-  console.log(avatars);
-  res.json({avatars});
+  const avatar = await prisma.avatar.findUnique({
+    where: { id: req.params.avatarId },
+  });
+
+  if (!avatar) {
+    return res.status(404).json({ message: "Avatar not found." });
+  }
+
+  return res.json({ avatar });
 });
 
 app.get("/api/v1/avatars", async (req, res) => {
+  const userId = typeof req.query.userId === "string" ? req.query.userId : "1";
+
   const avatars = await prisma.avatar.findMany({
     where: {
-      userId: "1",
-    }
-  })
-  res.json({avatars});
+      userId,
+    },
+    orderBy: {
+      id: "desc",
+    },
+  });
+
+  res.json({ avatars });
 });
 
 // Video
 app.post("/api/v1/video", async (req, res) => {
-  await generateVideo("The video opens with a medium, eye-level shot of a beautiful man with dark hair and warm brown eyes. She wears a magnificent, high-fashion flamingo dress with layers of pink and fuchsia feathers, complemented by whimsical pink, heart-shaped sunglasses. She walks with serene confidence through the crystal-clear, shallow turquoise water of a sun-drenched lagoon. The camera slowly pulls back to a medium-wide shot, revealing the breathtaking scene as the dress's long train glides and floats gracefully on the water's surface behind her. The cinematic, dreamlike atmosphere is enhanced by the vibrant colors of the dress against the serene, minimalist landscape, capturing a moment of pure elegance and high-fashion fantasy.", 
-    ["https://raw.githubusercontent.com/100xdevs-bootcamp-1/higgsy/refs/heads/main/apps/backend/assets/09578560-870f-4b23-a1cb-b549aa38a23f.png",
-      "https://raw.githubusercontent.com/100xdevs-bootcamp-1/higgsy/refs/heads/main/apps/backend/assets/a9d55f96-bc90-45e6-b078-7593b8bc3b11.png",
-      "https://raw.githubusercontent.com/100xdevs-bootcamp-1/higgsy/refs/heads/main/apps/backend/assets/8106a04c-bed5-4ac4-94ef-970c5aee1518.png"
-    ], "./output/video.mp4")
-  res.json({});
+  const parsed = CreateVideoSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({
+      message: "Please provide a valid prompt and reference images.",
+    });
+  }
+
+  const imageUrls = parsed.data.imageUrls.length
+    ? parsed.data.imageUrls
+    : [
+        "https://raw.githubusercontent.com/100xdevs-bootcamp-1/higgsy/refs/heads/main/apps/backend/assets/09578560-870f-4b23-a1cb-b549aa38a23f.png",
+        "https://raw.githubusercontent.com/100xdevs-bootcamp-1/higgsy/refs/heads/main/apps/backend/assets/a9d55f96-bc90-45e6-b078-7593b8bc3b11.png",
+        "https://raw.githubusercontent.com/100xdevs-bootcamp-1/higgsy/refs/heads/main/apps/backend/assets/8106a04c-bed5-4ac4-94ef-970c5aee1518.png",
+      ];
+
+  const outputPath = path.join(process.cwd(), "output", `video-${Date.now()}.mp4`);
+
+  try {
+    await generateVideo(parsed.data.prompt, imageUrls, outputPath);
+    return res.json({
+      success: true,
+      prompt: parsed.data.prompt,
+      videoUrl: `/output/${path.basename(outputPath)}`,
+    });
+  } catch (error) {
+    console.error("Video generation failed:", error);
+    return res.status(500).json({
+      message: "Video generation failed. Please try again.",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
 });
 
 app.get("/api/v1/video/:videoId", (req, res) => {
-  res.json({});
+  const filePath = path.join(process.cwd(), "output", req.params.videoId);
+  return res.sendFile(filePath, (error) => {
+    if (error) {
+      res.status(404).json({ message: "Video not found." });
+    }
+  });
 });
 
-app.get("/api/v1/videos", (req, res) => {
-  res.json({});
+app.get("/api/v1/videos", async (req, res) => {
+  const userId = typeof req.query.userId === "string" ? req.query.userId : "1";
+  const videos = await prisma.avatarVideo.findMany({
+    where: { userId },
+    orderBy: { id: "desc" },
+  });
+  res.json({ videos });
 });
 
 // User

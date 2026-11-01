@@ -14,7 +14,7 @@ type SigninCredentials = {
 };
 
 async function signin(credentials: SigninCredentials) {
-  const response = await axios.post<{ id: string }>(`${BACKEND_URL}/api/v1/signin`, credentials);
+  const response = await axios.post<{ id: string; username: string }>(`${BACKEND_URL}/api/v1/signin`, credentials);
   return response.data;
 }
 
@@ -33,7 +33,10 @@ export function Signin() {
 
   const mutation = useMutation({
     mutationFn: signin,
-    onSuccess: () => navigate("/dashboard"),
+    onSuccess: (data) => {
+      window.localStorage.setItem("higgsy-user", JSON.stringify({ id: data.id, username: data.username }));
+      navigate("/dashboard");
+    },
   });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {

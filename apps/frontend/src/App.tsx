@@ -1,31 +1,31 @@
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Appbar } from "./components/Appbar";
 import "./index.css";
-import { LandingPage } from "./pages/Landing";
-import { Signup } from "./pages/Signup";
-import { Signin } from "./pages/Signin";
 import { Dashboard } from "./pages/Dashbaord";
+import { LandingPage } from "./pages/Landing";
+import { Signin } from "./pages/Signin";
+import { Signup } from "./pages/Signup";
 import { VideoCreator } from "./pages/VideoCreator";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient();
 
 export function App() {
   return (
-    <div>
-       <QueryClientProvider client={queryClient}>
-          <BrowserRouter>
-            <Appbar />  
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/signin" element={<Signin />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/video-creator" element={<VideoCreator />} />
-            </Routes>
-          </BrowserRouter>
-      </QueryClientProvider>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <div className="min-h-screen bg-neutral-950 text-white">
+          <Appbar />
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/signin" element={<Signin />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/video-creator" element={<VideoCreator />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
