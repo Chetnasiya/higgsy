@@ -23,9 +23,12 @@ async function generateVideo(prompt: string) {
 }
 
 export function VideoCreator() {
-  const [prompt, setPrompt] = useState(
-    "A cinematic lifestyle ad with a confident creator walking through a luminous studio, wearing luxury fashion, dramatic lighting, and smooth camera motion.",
-  );
+  const defaultPrompt =
+    "A cinematic lifestyle ad with a confident creator walking through a luminous studio, wearing luxury fashion, dramatic lighting, and smooth camera motion.";
+  const samplePrompt =
+    "A sleek product reveal in a high-contrast studio with dramatic reflections, cinematic camera movement, and luxury styling.";
+
+  const [prompt, setPrompt] = useState(defaultPrompt);
   const [resultUrl, setResultUrl] = useState("");
 
   const mutation = useMutation({
@@ -36,6 +39,16 @@ export function VideoCreator() {
       }
     },
   });
+
+  const handleGenerate = () => {
+    setResultUrl("");
+    mutation.mutate(prompt.trim());
+  };
+
+  const handleSamplePrompt = () => {
+    setPrompt(samplePrompt);
+    setResultUrl("");
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -57,8 +70,12 @@ export function VideoCreator() {
           </div>
 
           <textarea
+            aria-label="Video prompt"
             value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
+            onChange={(event) => {
+              setPrompt(event.target.value);
+              setResultUrl("");
+            }}
             rows={8}
             className="w-full resize-none rounded-2xl border border-white/10 bg-neutral-900 p-4 text-base text-white placeholder:text-neutral-500 focus:border-lime-300/80 focus:outline-none"
             placeholder="Describe the scene you want to generate..."
@@ -75,7 +92,7 @@ export function VideoCreator() {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button
               type="button"
-              onClick={() => mutation.mutate(prompt)}
+              onClick={handleGenerate}
               disabled={mutation.isPending || prompt.trim().length < 8}
               className="rounded-full bg-lime-300 text-neutral-950 hover:bg-lime-200"
             >
@@ -84,7 +101,7 @@ export function VideoCreator() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => setPrompt("A sleek product reveal in a high-contrast studio with dramatic reflections, cinematic camera movement, and luxury styling.")}
+              onClick={handleSamplePrompt}
               className="rounded-full border-white/10 bg-white/5 text-white hover:bg-white/10"
             >
               Use sample prompt
