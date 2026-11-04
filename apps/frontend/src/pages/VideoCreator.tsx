@@ -62,7 +62,10 @@ export function VideoCreator() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-        <section className="rounded-3xl border border-white/10 bg-white/5 p-6">
+        <section
+          aria-busy={mutation.isPending}
+          className="rounded-3xl border border-white/10 bg-white/5 p-6"
+        >
           <div className="mb-4 flex items-center gap-2 text-sm font-medium text-neutral-300">
             <Camera className="size-4 text-lime-300" />
             Storyboard prompt
