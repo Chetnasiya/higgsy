@@ -5,7 +5,6 @@ import { Camera, CheckCircle2, Sparkles, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { BACKEND_URL } from "@/config";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 const sampleImages = [
   "https://raw.githubusercontent.com/100xdevs-bootcamp-1/higgsy/refs/heads/main/apps/backend/assets/09578560-870f-4b23-a1cb-b549aa38a23f.png",
@@ -126,7 +125,14 @@ export function VideoCreator() {
             </div>
           ) : resultUrl ? (
             <div className="overflow-hidden rounded-2xl border border-white/10 bg-neutral-900">
-              <video src={resultUrl} controls className="h-[360px] w-full object-cover" />
+              <video
+                src={resultUrl}
+                controls
+                playsInline
+                preload="metadata"
+                aria-label="Generated video preview"
+                className="h-[360px] w-full object-cover"
+              />
             </div>
           ) : (
             <div className="flex h-[360px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-neutral-900/80 p-6 text-center text-neutral-300">
