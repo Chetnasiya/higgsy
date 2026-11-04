@@ -82,9 +82,14 @@ export function VideoCreator() {
           />
 
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            {sampleImages.map((image) => (
+            {sampleImages.map((image, index) => (
               <div key={image} className="overflow-hidden rounded-2xl border border-white/10 bg-neutral-900">
-                <img src={image} alt="Shot reference" className="h-20 w-full object-cover" />
+                <img
+                  src={image}
+                  alt={`Storyboard reference ${index + 1}`}
+                  loading="lazy"
+                  className="h-20 w-full object-cover"
+                />
               </div>
             ))}
           </div>
