@@ -15,6 +15,7 @@ type Avatar = {
   id: string;
   name: string;
   userId: string;
+  avatarImages: { type: string; url: string }[];
 };
 
 function getCurrentUser(): UserSession | null {
@@ -167,7 +168,10 @@ export function Dashboard() {
               {query.data.map((avatar) => (
                 <div key={avatar.id} className="overflow-hidden rounded-2xl border border-white/10 bg-neutral-900">
                   <img
-                    src={avatarUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80"}
+                    src={
+                      avatar.avatarImages.find((image) => image.type === "User")?.url ??
+                      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80"
+                    }
                     alt={avatar.name}
                     className="h-40 w-full object-cover"
                   />

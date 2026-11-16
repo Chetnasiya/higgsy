@@ -84,6 +84,12 @@ app.post("/api/v1/avatar", async (req, res) => {
     data: {
       userId,
       name: parsed.data.name,
+      avatarImages: {
+        create: {
+          type: "User",
+          url: parsed.data.image,
+        },
+      },
     },
   });
 
@@ -108,6 +114,9 @@ app.get("/api/v1/avatars", async (req, res) => {
   const avatars = await prisma.avatar.findMany({
     where: {
       userId,
+    },
+    include: {
+      avatarImages: true,
     },
     orderBy: {
       id: "desc",
