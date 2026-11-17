@@ -1,15 +1,21 @@
 import express from "express";
+import fs from "node:fs";
 import path from "node:path";
 import { prisma } from "./db";
-import { CreateAvatarSchenma, CreateUserSchema, CreateVideoSchema } from "./types";
+import { CreateAvatarSchema, CreateAvatarSchenma, CreateUserSchema, CreateVideoSchema } from "./types";
 import { generateVideo } from "./video";
 import cors from "cors";
 
 const app = express();
 
+const outputDir = path.join(process.cwd(), "output");
+if (!fs.existsSync(outputDir)) {
+  fs.mkdirSync(outputDir, { recursive: true });
+}
+
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
-app.use("/output", express.static(path.join(process.cwd(), "output")));
+app.use("/output", express.static(outputDir));
 
 // Auth
 app.post("/api/v1/signup", async (req, res) => {
@@ -99,6 +105,9 @@ app.post("/api/v1/avatar", async (req, res) => {
 app.get("/api/v1/avatar/:avatarId", async (req, res) => {
   const avatar = await prisma.avatar.findUnique({
     where: { id: req.params.avatarId },
+    include: {
+      avatarImages: true,
+    },
   });
 
   if (!avatar) {
@@ -162,9 +171,10 @@ app.post("/api/v1/video", async (req, res) => {
 });
 
 app.get("/api/v1/video/:videoId", (req, res) => {
-  const filePath = path.join(process.cwd(), "output", req.params.videoId);
+  const safeFilename = path.basename(req.params.videoId);
+  const filePath = path.join(process.cwd(), "output", safeFilename);
   return res.sendFile(filePath, (error) => {
-    if (error) {
+    if (error && !res.headersSent) {
       res.status(404).json({ message: "Video not found." });
     }
   });

@@ -1,5 +1,5 @@
-import { Link, NavLink, useLocation } from "react-router";
-import { Sparkles } from "lucide-react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router";
+import { LogOut, Sparkles, User } from "lucide-react";
 import { Button } from "./ui/button";
 
 const navItems = [
@@ -8,8 +8,29 @@ const navItems = [
   { to: "/video-creator", label: "Video maker" },
 ];
 
+type UserSession = {
+  id: string;
+  username: string;
+};
+
+function getCurrentUser(): UserSession | null {
+  try {
+    const raw = window.localStorage.getItem("higgsy-user");
+    return raw ? (JSON.parse(raw) as UserSession) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function Appbar() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const currentUser = getCurrentUser();
+
+  const handleSignOut = () => {
+    window.localStorage.removeItem("higgsy-user");
+    navigate("/signin");
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-neutral-950/80 backdrop-blur-xl">
@@ -40,12 +61,32 @@ export function Appbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button variant="ghost" asChild className="hidden text-white hover:bg-white/5 sm:inline-flex">
-            <Link to="/signin">Sign in</Link>
-          </Button>
-          <Button asChild className="rounded-full bg-lime-300 text-neutral-950 hover:bg-lime-200">
-            <Link to="/signup">Get started</Link>
-          </Button>
+          {currentUser ? (
+            <>
+              <span className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-neutral-300 sm:inline-flex">
+                <User className="size-3.5 text-lime-300" />
+                {currentUser.username}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleSignOut}
+                className="text-neutral-400 hover:bg-white/5 hover:text-white"
+              >
+                <LogOut className="mr-1.5 size-3.5" />
+                Sign out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" asChild className="hidden text-white hover:bg-white/5 sm:inline-flex">
+                <Link to="/signin">Sign in</Link>
+              </Button>
+              <Button asChild className="rounded-full bg-lime-300 text-neutral-950 hover:bg-lime-200">
+                <Link to="/signup">Get started</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

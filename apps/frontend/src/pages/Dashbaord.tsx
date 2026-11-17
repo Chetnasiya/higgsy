@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { ImagePlus, Sparkles, Video } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { BACKEND_URL } from "@/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ export function Dashboard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["avatars"] });
+      setName("");
     },
   });
 
@@ -79,7 +81,7 @@ export function Dashboard() {
           <h1 className="mt-2 text-4xl font-semibold tracking-tight text-white">Welcome back, {currentUser?.username ?? "creator"}</h1>
         </div>
         <Button asChild className="rounded-full bg-lime-300 text-neutral-950 hover:bg-lime-200">
-          <a href="/video-creator">Open studio</a>
+          <Link to="/video-creator">Open studio</Link>
         </Button>
       </div>
 
@@ -146,6 +148,20 @@ export function Dashboard() {
             >
               {mutation.isPending ? "Saving..." : "Save avatar"}
             </Button>
+
+            {mutation.isError && (
+              <p className="text-xs text-red-400">
+                {axios.isAxiosError(mutation.error)
+                  ? (mutation.error.response?.data as { message?: string })?.message ?? "Failed to save avatar."
+                  : "Failed to save avatar."}
+              </p>
+            )}
+
+            {!currentUser && (
+              <p className="text-xs text-neutral-400">
+                Please <Link to="/signin" className="text-lime-300 underline hover:text-lime-200">sign in</Link> to save avatars.
+              </p>
+            )}
           </div>
         </section>
 
@@ -169,7 +185,7 @@ export function Dashboard() {
                 <div key={avatar.id} className="overflow-hidden rounded-2xl border border-white/10 bg-neutral-900">
                   <img
                     src={
-                      avatar.avatarImages.find((image) => image.type === "User")?.url ??
+                      avatar.avatarImages?.find((image) => image.type === "User")?.url ??
                       "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=900&q=80"
                     }
                     alt={avatar.name}
