@@ -156,10 +156,34 @@ app.post("/api/v1/video", async (req, res) => {
 
   try {
     await generateVideo(parsed.data.prompt, imageUrls, outputPath);
+
+    let videoId: string | undefined;
+    if (parsed.data.userId) {
+      try {
+        const user = await prisma.user.findUnique({ where: { id: parsed.data.userId } });
+        if (user) {
+          const videoRecord = await prisma.avatarVideo.create({
+            data: {
+              userId: parsed.data.userId,
+              prompt: parsed.data.prompt,
+              duration: 8,
+              width: 1280,
+              height: 720,
+              status: "Done",
+            },
+          });
+          videoId = videoRecord.id;
+        }
+      } catch (err) {
+        console.warn("Could not save video record to database:", err);
+      }
+    }
+
     return res.json({
       success: true,
       prompt: parsed.data.prompt,
       videoUrl: `/output/${path.basename(outputPath)}`,
+      videoId,
     });
   } catch (error) {
     console.error("Video generation failed:", error);

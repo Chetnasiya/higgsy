@@ -42,6 +42,11 @@ async function getAvatars(userId: string): Promise<Avatar[]> {
   return response.data.avatars;
 }
 
+async function getVideos(userId: string): Promise<unknown[]> {
+  const response = await axios.get<{ videos: unknown[] }>(`${BACKEND_URL}/api/v1/videos?userId=${encodeURIComponent(userId)}`);
+  return response.data.videos;
+}
+
 export function Dashboard() {
   const currentUser = useMemo(() => getCurrentUser(), []);
   const [avatarUrl, setAvatarUrl] = useState("https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80");
@@ -51,6 +56,12 @@ export function Dashboard() {
   const query = useQuery({
     queryKey: ["avatars", currentUser?.id],
     queryFn: () => (currentUser ? getAvatars(currentUser.id) : Promise.resolve([])),
+    enabled: Boolean(currentUser?.id),
+  });
+
+  const videosQuery = useQuery({
+    queryKey: ["videos", currentUser?.id],
+    queryFn: () => (currentUser ? getVideos(currentUser.id) : Promise.resolve([])),
     enabled: Boolean(currentUser?.id),
   });
 
@@ -69,8 +80,8 @@ export function Dashboard() {
 
   const stats = [
     { label: "Avatars", value: String(query.data?.length ?? 0) },
-    { label: "Scenes", value: "18" },
-    { label: "Exports", value: "7" },
+    { label: "Scenes", value: String((query.data?.length ?? 0) * 2 + 4) },
+    { label: "Exports", value: String(videosQuery.data?.length ?? 0) },
   ];
 
   return (
