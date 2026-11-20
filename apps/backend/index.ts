@@ -17,6 +17,10 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use("/output", express.static(outputDir));
 
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // Auth
 app.post("/api/v1/signup", async (req, res) => {
   const parsed = CreateUserSchema.safeParse(req.body);
@@ -115,6 +119,35 @@ app.get("/api/v1/avatar/:avatarId", async (req, res) => {
   }
 
   return res.json({ avatar });
+});
+
+app.delete("/api/v1/avatar/:avatarId", async (req, res) => {
+  try {
+    const avatar = await prisma.avatar.findUnique({
+      where: { id: req.params.avatarId },
+    });
+
+    if (!avatar) {
+      return res.status(404).json({ message: "Avatar not found." });
+    }
+
+    await prisma.avatarImage.deleteMany({
+      where: { avatarId: req.params.avatarId },
+    });
+
+    await prisma.avatarVideoReference.deleteMany({
+      where: { avatarId: req.params.avatarId },
+    });
+
+    await prisma.avatar.delete({
+      where: { id: req.params.avatarId },
+    });
+
+    return res.json({ success: true, message: "Avatar deleted successfully." });
+  } catch (error) {
+    console.error("Failed to delete avatar:", error);
+    return res.status(500).json({ message: "Failed to delete avatar." });
+  }
 });
 
 app.get("/api/v1/avatars", async (req, res) => {

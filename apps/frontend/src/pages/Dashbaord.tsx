@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { ImagePlus, Sparkles, Video } from "lucide-react";
+import { ImagePlus, Sparkles, Trash2, Video } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router";
 import { BACKEND_URL } from "@/config";
@@ -47,6 +47,13 @@ async function getVideos(userId: string): Promise<unknown[]> {
   return response.data.videos;
 }
 
+async function deleteAvatar(avatarId: string) {
+  const response = await axios.delete<{ success: boolean; message: string }>(
+    `${BACKEND_URL}/api/v1/avatar/${encodeURIComponent(avatarId)}`
+  );
+  return response.data;
+}
+
 export function Dashboard() {
   const currentUser = useMemo(() => getCurrentUser(), []);
   const [avatarUrl, setAvatarUrl] = useState("https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=900&q=80");
@@ -75,6 +82,13 @@ export function Dashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["avatars"] });
       setName("");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteAvatar,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["avatars"] });
     },
   });
 
@@ -203,8 +217,22 @@ export function Dashboard() {
                     className="h-40 w-full object-cover"
                   />
                   <div className="p-4">
-                    <p className="text-base font-semibold text-white">{avatar.name}</p>
-                    <p className="mt-1 text-xs text-neutral-400">Avatar #{avatar.id.slice(0, 6)}</p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-base font-semibold text-white">{avatar.name}</p>
+                        <p className="mt-1 text-xs text-neutral-400">Avatar #{avatar.id.slice(0, 6)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => deleteMutation.mutate(avatar.id)}
+                        disabled={deleteMutation.isPending}
+                        title="Delete avatar"
+                        aria-label={`Delete ${avatar.name}`}
+                        className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-white/10 hover:text-red-400 disabled:opacity-50"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
