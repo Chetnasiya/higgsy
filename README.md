@@ -7,7 +7,7 @@ OpenRouter's video API.
 ## Requirements
 
 - Bun 1.3.11 or newer
-- A PostgreSQL database
+- A PostgreSQL database.
 - A Google AI API key for image generation
 - An OpenRouter API key with access to `google/veo-3.1` for video generation
 
