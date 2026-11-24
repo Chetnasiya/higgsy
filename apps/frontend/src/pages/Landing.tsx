@@ -120,7 +120,10 @@ export function LandingPage() {
 
         <div className="grid gap-5 md:grid-cols-3">
           {featureCards.map(({ icon: Icon, title, text }) => (
-            <div key={title} className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <div
+              key={title}
+              className="rounded-2xl border border-white/10 bg-white/5 p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-lime-300/30 hover:bg-white/[0.07]"
+            >
               <div className="mb-4 inline-flex size-12 items-center justify-center rounded-full bg-lime-300/15 text-lime-300">
                 <Icon className="size-5" />
               </div>
@@ -154,6 +157,53 @@ export function LandingPage() {
           <CarouselNext className="border-white/10 bg-white/5 text-white hover:bg-white/10" />
         </Carousel>
       </section>
+
+      {/* Call to action section */}
+      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-r from-lime-950/40 via-neutral-900 to-neutral-900 p-8 sm:p-12">
+          <div className="relative z-10 max-w-2xl">
+            <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Ready to create your next motion masterpiece?
+            </h2>
+            <p className="mt-4 text-base text-neutral-300">
+              Start generating high-fidelity AI avatars and cinematic videos with zero setup required.
+            </p>
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Button asChild className="rounded-full bg-lime-300 px-6 text-neutral-950 hover:bg-lime-200">
+                <Link to="/signup">
+                  Get started free
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="rounded-full border-white/15 bg-white/5 px-6 text-white hover:bg-white/10">
+                <Link to="/video-creator">
+                  Try video maker
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-10">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 sm:flex-row sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 text-sm font-semibold tracking-[0.2em] text-white/90 uppercase">
+            <span className="flex size-7 items-center justify-center rounded-full bg-lime-300/20 text-lime-300">
+              <Sparkles className="size-3.5" />
+            </span>
+            Higgsy
+          </div>
+          <div className="flex gap-6 text-sm text-neutral-400">
+            <Link to="/" className="transition-colors hover:text-white">Home</Link>
+            <Link to="/dashboard" className="transition-colors hover:text-white">Dashboard</Link>
+            <Link to="/video-creator" className="transition-colors hover:text-white">Studio</Link>
+          </div>
+          <p className="text-xs text-neutral-500">
+            &copy; 2026 Higgsy Studio. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }
